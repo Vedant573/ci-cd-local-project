@@ -63,20 +63,22 @@ pipeline {
             	credentialsId: 'github-creds',
             	usernameVariable: 'GIT_USER',
             	passwordVariable: 'GIT_TOKEN'
-        )]) {
-            sh '''
-            git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Vedant573/ats-gitops.git
-            cd ats-gitops
-            sed -i "s/REPLACEME/${IMAGE_TAG}/g" k8s/ats/deployment.yaml
-            git config user.email "jenkins@local"
-            git config user.name "jenkins"
-            git add .
-            git commit -m "Deploy ATS image ${IMAGE_TAG}"
-            git push origin main
-            '''
+           )])  {
+            	sh '''
+            	rm -rf ats-gitops
+            	git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/Vedant573/ats-gitops.git
+            	cd ats-gitops
+            	sed -i "s/REPLACEME/${IMAGE_TAG}/g" k8s/ats/deployment.yaml
+            	git config user.email "jenkins@local"
+            	git config user.name "jenkins"
+            	git add .
+            	git commit -m "Deploy ATS image ${IMAGE_TAG}" || echo "No changes to commit"
+            	git push origin main
+            	'''
+        	}
+    	       }
               }
-            }
+
           }
-        }
       }
 
