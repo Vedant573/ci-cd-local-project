@@ -2,8 +2,10 @@ pipeline {
     agent any
 
     environment {
+        DOCKERHUB_USER = "vedant573"
         IMAGE_NAME = "ats-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
+        FULL_IMAGE = "${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}"
     }
 
     stages {
@@ -36,8 +38,23 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t $IMAGE_NAME:$IMAGE_TAG -f docker/Dockerfile .
+                docker build -t $FULL_IMAGE -f docker/Dockerfile .
                 '''
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerHubCred',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push $FULL_IMAGE
+                    '''
+                }
             }
         }
     }
